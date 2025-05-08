@@ -12,13 +12,12 @@ if __name__ == "__main__":
     thread_list = []
     for i in range(1, int(book_chapter_count) + 1):
         thread = threading.Thread(target=run_script, args=(
-            f"split_on_silence.py",
-
-            # f"https://live.bible.is/bible/PAMPBS/MRK/{i}?audio_type=audio_drama"
+            f"scrape_audio.py",
+            f"https://live.bible.is/bible/MRWNVS/MRK/{i}?audio_type=audio_drama"
             ))
-        thread.name
         thread_list.append(thread)
         thread.start()
+
     for thread in thread_list:
         thread.join()
 
