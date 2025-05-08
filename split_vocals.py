@@ -22,7 +22,7 @@ if __name__ == "__main__":
     
     separator = Separator('spleeter:2stems')
     for i in range(segement_count):
-        separator.separate_to_file(f"segment_{i}.mp3", f"output/segment_{i}", codec='mp3', duration=3600)
+        separator.separate_to_file(f"segment_{i}.mp3", f"output/", codec='mp3', duration=3600)
 
     for i in range(segement_count):
         vocal_path = f"output/segment_{i}/vocals.mp3"

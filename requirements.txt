@@ -1,0 +1,5 @@
+beautifulsoup4==4.13.4
+pydub==0.25.1
+Requests==2.32.3
+selenium==4.32.0
+spleeter==2.4.2
