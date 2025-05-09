@@ -14,7 +14,7 @@ def segment_vocals(input_file, output_dir, silence_thresh=-50, min_silence_len=8
     - min_silence_len: Minimum length of silence to consider (default: 800 ms).
     """
     # Load the audio file
-    audio = AudioSegment.from_file(input_file)
+    audio = AudioSegment.from_mp3(input_file)
     
     print(f"Processing {input_file}...")
 
@@ -24,11 +24,11 @@ def segment_vocals(input_file, output_dir, silence_thresh=-50, min_silence_len=8
                                 silence_thresh=silence_thresh)
 
     print(f"Found {len(segments)} segments.")
-    
+
     output_path = os.path.join(output_dir, Path(input_file).stem)
 
     if not Path.exists(output_path):
-        Path(output_path).mkdir(exist_ok=False)
+        Path(output_path).mkdir(parents=True, exist_ok=True)
 
     # Save each segment as a separate file
     for i, segment in enumerate(segments):
