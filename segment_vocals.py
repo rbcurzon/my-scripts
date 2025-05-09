@@ -15,12 +15,16 @@ def segment_vocals(input_file, output_dir, silence_thresh=-50, min_silence_len=8
     """
     # Load the audio file
     audio = AudioSegment.from_file(input_file)
+    
+    print(f"Processing {input_file}...")
 
     # Split the audio on silence
     segments = split_on_silence(audio, 
                                 min_silence_len=min_silence_len, 
                                 silence_thresh=silence_thresh)
 
+    print(f"Found {len(segments)} segments.")
+    
     output_path = os.path.join(output_dir, Path(input_file).stem)
 
     if not Path.exists(output_path):
@@ -46,10 +50,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Create output directory if it doesn't exist
-    os.makedirs(args.output_dir, exist_ok=False)
-
-    # Segment vocals
-    segment_vocals(args.input_file, args.output_dir, args.silence_thresh, args.min_silence_len)
+    os.makedirs(args.output_dir, exist_ok=True)
 
     with Pool(processes=2) as pool:
         # Get a list of all audio files in the input directory

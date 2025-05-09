@@ -7,16 +7,20 @@ def run_script(script_name, arg1):
 
 if __name__ == "__main__":
 
-    book_chapter_count = sys.argv[1] if len(sys.argv) > 1 else 1
+    
+    first = sys.argv[1]
+    last = sys.argv[2]
 
     thread_list = []
-    for i in range(1, int(book_chapter_count) + 1):
+    for i in range(1, int(last) + 1, 3):
         thread = threading.Thread(target=run_script, args=(
-            f"scrape_audio.py",
-            f"https://live.bible.is/bible/MRWNVS/MRK/{i}?audio_type=audio_drama"
+            f"../scrape_audio.py",
+            f"https://live.bible.is/bible/PAGPBS/MRK/{i}?audio_type=audio_drama"
             ))
         thread_list.append(thread)
         thread.start()
+
+    # Wait for all threads to complete
 
     for thread in thread_list:
         thread.join()

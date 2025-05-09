@@ -1,10 +1,9 @@
 # create a script
 
 if __name__ == "__main__":
-    import os
-    from pathlib import Path
     import sys
     import time
+    from pathlib import Path
     import requests
     from bs4 import BeautifulSoup
     from selenium import webdriver
@@ -17,7 +16,6 @@ if __name__ == "__main__":
     
 
     URL = sys.argv[1]
-
 
     options = Options()
     options.add_argument("--headless")
@@ -41,4 +39,5 @@ if __name__ == "__main__":
     with open(book_chapter_text.replace(' ', '') + ".mp3", "wb") as file:
         file.write(audio_page.content)
 
+    browser.close()
     browser.quit()

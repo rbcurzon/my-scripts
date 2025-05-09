@@ -15,12 +15,16 @@ if __name__ == "__main__":
         print(f"Provided path {split_vocals_path} is not a directory.")
         sys.exit(1)
 
-    p = Path(os.path.join(os.getcwd(),
-                        split_vocals_path))
+    p = Path(split_vocals_path)
 
     ptr1 = None
 
-    mp3s = sorted(p.rglob("*.mp3"),key=lambda x:float(re.findall("(\d+)",str(x))[0]), reverse=True)
+    try:
+        mp3s = sorted(p.rglob("*.mp3"),key=lambda x:float(re.findall(r"\d+",str(Path(x).stem))[0]))
+    except Exception as e:
+        print(f"Error while searching for mp3 files: {e}")
+        sys.exit(1)
+
     print(mp3s)
     for file in mp3s:
         print("Appending", file)
@@ -31,7 +35,8 @@ if __name__ == "__main__":
         else:
             ptr1 += audio
 
-    output_path = os.path.join("combined.mp3")
+    output_path = os.path.join(p, "combined.mp3")
+
     if ptr1:
         ptr1.export(output_path, format="mp3")
         print(f"Saved to {output_path}")
