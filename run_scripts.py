@@ -10,8 +10,8 @@ def run_script(script_name, arg1):
 if __name__ == "__main__":
     with Pool(processes=2) as pool:
         script_args = [
-            ("my-scripts/scrape_audio.py", f"https://live.bible.is/bible/ILONGN/MRK/{i}")
-            for i in range(int(sys.argv[1]), int(sys.argv[2]) + 1)
+            (sys.argv[1],f"{sys.argv[2]}/{i}")
+            for i in range(1, int(sys.argv[3]) + 1)
         ]
         pool.starmap(run_script, script_args)
 
