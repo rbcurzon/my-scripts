@@ -25,17 +25,16 @@ def transcribe_segments(segment_path):
         print(f"Invalid path: {segment_path}. Please provide a directory or an mp3 file.")
         return
 
-    files = Path(segment_path).glob("*.mp3")
-
     print(f"Transcribing {segment_path}...")
     
     with open(metadata_path, "w") as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f, delimiter=",")
+        writer.writerow(["file_name", "transcription"])
 
         for audio_file in files:
             # Transcribe the audio file
-            result = model.transcribe(audio_file.name, language="tl", task="transcribe")
-            writer.writerow([audio_file, result['text']])
+            result = model.transcribe(str(audio_file), language="tl", task="transcribe")
+            writer.writerow([audio_file.name, result['text']])
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
