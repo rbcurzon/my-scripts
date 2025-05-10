@@ -25,7 +25,7 @@ def segment_vocals(input_file, output_dir, silence_thresh=-45, min_silence_len=8
 
     print(f"Found {len(segments)} segments.")
 
-    output_path = os.path.join(output_dir, output_dir.split("/")[-2])
+    output_path = os.path.join(output_dir, input_file.split("/")[-2])
     print(output_path)
     if not Path(output_path).exists():
         Path(output_path).mkdir(parents=True, exist_ok=True)
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Segment vocals from an audio file.")
     parser.add_argument("input_file", nargs='+', help="Path to one or more input audio files or a directory.")
-    parser.add_argument("--o", help="Directory to save segmented files.")
+    parser.add_argument("--output", help="Directory to save segmented files.")
     parser.add_argument("--silence_thresh", type=int, default=-45, help="Silence threshold in dBFS.")
     parser.add_argument("--min_silence_len", type=int, default=800, help="Minimum silence length in ms.")
 
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Create output directory if it doesn't exist
-    os.makedirs(args.output_dir, exist_ok=True)
+    os.makedirs(args.output, exist_ok=True)
 
     with Pool(processes=2) as pool:
         # Get a list of all audio files in the input directory
@@ -62,7 +62,7 @@ if __name__ == "__main__":
                 input_files.extend(glob(os.path.join(input_path, "vocals*")))
 
         # Prepare arguments for parallel processing
-        tasks = [(file, args.output_dir, args.silence_thresh, args.min_silence_len) for file in input_files]
+        tasks = [(file, args.output, args.silence_thresh, args.min_silence_len) for file in input_files]
 
         # Process files in parallel
         pool.starmap(segment_vocals, tasks)
