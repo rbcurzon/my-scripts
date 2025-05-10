@@ -12,6 +12,8 @@ def transcribe_segments(segment_path):
     Transcribe the given audio file using the Whisper model.
     """
     
+    segment_path = Path(segment_path)
+
     if segment_path.is_dir():
         # If the path is a directory, get all mp3 files in it
         files = Path(segment_path).glob("*.mp3")
