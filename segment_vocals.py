@@ -25,14 +25,16 @@ def segment_vocals(input_file, output_dir, silence_thresh=-45, min_silence_len=8
 
     print(f"Found {len(segments)} segments.")
 
-    output_path = os.path.join(output_dir, input_file.split("/")[-2])
-    print(output_path)
+    output_path = Path(output_dir) / Path(input_file).stem
+
     if not Path(output_path).exists():
         Path(output_path).mkdir(parents=True, exist_ok=True)
 
     # Save each segment as a separate file
     for i, segment in enumerate(segments):
         segment.export(f"{output_path}/segment_{i}.mp3", format="mp3")
+
+    print(f"Segments saved to {output_path}")
 
 if __name__ == "__main__":
     import argparse
@@ -58,8 +60,6 @@ if __name__ == "__main__":
         for input_path in args.input_file:
             if Path(input_path).is_file():
                 input_files.append(input_path)
-            else:
-                input_files.extend(glob(os.path.join(input_path, "vocals*")))
 
         # Prepare arguments for parallel processing
         tasks = [(file, args.output, args.silence_thresh, args.min_silence_len) for file in input_files]

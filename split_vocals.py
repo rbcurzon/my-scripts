@@ -1,6 +1,8 @@
-import os
 import sys
 import math
+import os
+from glob import glob
+from pathlib import Path
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
 from multiprocessing import Pool
@@ -12,10 +14,10 @@ from multiprocessing import Pool
 def process_segment(audio_file, segment):
     i = segment
     start_time = i * 3600000
-    end_time = min((i + 1) * 3600000, len(audio))
-    segment = audio[start_time:end_time]
+    end_time = min((i + 1) * 3600000, len(audio_file))
+    segment = audio_file[start_time:end_time]
     print(f"Processing segment {i} from {start_time} to {end_time}")
-    segment.export(f"segment_{i}.mp3", format="mp3")
+    segment.export(audio_file.split("/")[-2] / f"segment_{i}.mp3", format="mp3")
 
 if __name__ == "__main__":
 
@@ -23,15 +25,17 @@ if __name__ == "__main__":
         print("Please provide the audio file path as a command line argument.")
         sys.exit(1)
 
-    audio = AudioSegment.from_file(sys.argv[1], format="m4a")
-
-    segement_count = math.ceil(len(audio) / 3600000)
-
-    print("Segment count: ", segement_count)
-
     # Put the audio in batch of 1 hour
     with Pool(processes=2) as pool:
-        pool.starmap(process_segment, [(sys.argv[1], i) for i in range(segement_count)])
+        # pool.starmap(process_segment, [(sys.argv[1], i) for i in range(segement_count)])
+
+        input_files = sys.argv[1:]
+
+        # Prepare arguments for parallel processing
+        tasks = [(file, 1) for file in input_files]
+
+        # Process files in parallel
+        pool.starmap(process_segment, tasks)
 
 
     # # Separate vocals from each segment

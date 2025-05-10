@@ -34,7 +34,7 @@ def transcribe_segments(segment_path):
 
         for audio_file in files:
             # Transcribe the audio file
-            result = model.transcribe(audio_file, language="tl", task="transcribe")
+            result = model.transcribe(audio_file.name, language="tl", task="transcribe")
             writer.writerow([audio_file, result['text']])
 
 if __name__ == "__main__":

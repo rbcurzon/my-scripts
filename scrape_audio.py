@@ -36,11 +36,11 @@ if __name__ == "__main__":
     p = Path("")
     # Download audio
     audio_page = requests.get(audio_player_src)
-    output_dir = p / sys.argv[1].split("/")[-3]
+    output_dir = p / sys.argv[1].split("/")[-4]
     output_dir.mkdir(parents=True, exist_ok=True)
     
     with open(output_dir / (book_chapter_text.replace(' ', '') + ".mp3"), "wb") as file:
-        print("Exporting: ", file.name)
+        print("Exporting: ",file.name)
         file.write(audio_page.content)
 
     browser.close()
