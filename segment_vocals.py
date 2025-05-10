@@ -25,7 +25,8 @@ def segment_vocals(input_file, output_dir, silence_thresh=-45, min_silence_len=8
 
     print(f"Found {len(segments)} segments.")
 
-    output_path = Path(output_dir) / Path(input_file).stem
+    #
+    output_path = Path(output_dir) / input_file.split('/')[-2]
 
     if not Path(output_path).exists():
         Path(output_path).mkdir(parents=True, exist_ok=True)
