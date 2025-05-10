@@ -5,7 +5,7 @@ from pathlib import Path
 from multiprocessing import Pool
 import whisper
 
-model = whisper.load_model("turbo")
+model = whisper.load_model("large")
 
 def transcribe_segments(segment_path):
     """
