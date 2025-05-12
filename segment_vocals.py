@@ -1,3 +1,4 @@
+import multiprocessing
 from pathlib import Path
 from multiprocessing import Pool
 from pydub import AudioSegment
@@ -55,7 +56,7 @@ if __name__ == "__main__":
     # Create output directory if it doesn't exist
     os.makedirs(args.output, exist_ok=True)
 
-    with Pool(processes=2) as pool:
+    with Pool(processes=multiprocessing.cpu_count()) as pool:
         # Get a list of all audio files in the input directory
         input_files = []
         for input_path in args.input_file:
