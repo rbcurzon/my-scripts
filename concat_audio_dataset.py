@@ -25,4 +25,7 @@ if __name__ == "__main__":
         print("Appending", directory)
 
         ds['train'] = concatenate_datasets([ds['train'], load_dataset('audiofolder', data_dir=directory)['train']])
+
+    # Save the concatenated dataset to disk
+    ds.save_to_disk(args.output_file)
     
