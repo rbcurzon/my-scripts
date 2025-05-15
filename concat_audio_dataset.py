@@ -13,11 +13,11 @@ if __name__ == "__main__":
 
     ds = DatasetDict()
 
-    first_dir = parser.input_directories[0]
+    first_dir = args.input_directories[0]
     
     ds = load_dataset('audiofolder', data_dir=first_dir)
 
-    for directory in parser.input_directories[1:]:
+    for directory in args.input_directories[1:]:
         
         if directory == first_dir:
             continue
