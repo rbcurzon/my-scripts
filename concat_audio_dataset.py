@@ -15,6 +15,8 @@ if __name__ == "__main__":
 
     first_dir = args.input_directories[0]
     
+    print("First directory", first_dir)
+    
     ds = load_dataset('audiofolder', data_dir=first_dir)
 
     for directory in args.input_directories[1:]:
