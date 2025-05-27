@@ -1,15 +1,13 @@
 # create a script
+import sys
+import time
+from pathlib import Path
+import requests
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 
 if __name__ == "__main__":
-    import sys
-    import time
-    from pathlib import Path
-    import requests
-    from bs4 import BeautifulSoup
-    from selenium import webdriver
-    from selenium.webdriver.common.by import By
-    from selenium.webdriver.firefox.options import Options
-
     if len(sys.argv) != 2:
         print("Usage: python audio_scrapper.py <URL>")
         sys.exit(1)
@@ -22,7 +20,7 @@ if __name__ == "__main__":
     browser = webdriver.Firefox(options=options)
     browser.get(URL)
 
-    time.sleep(3)
+    time.sleep(2)
 
     rendered_page = browser.page_source
 
@@ -31,6 +29,9 @@ if __name__ == "__main__":
     book_chapter_text = soup.find(class_="book-chapter-text").get("title")
 
     audio_player_src = soup.find("video", class_="audio-player").get("src")
+
+    # print(book_chapter_text)
+    # print(audio_player_src, "\n")
 
     # output
     p = Path("")
