@@ -46,7 +46,5 @@ if __name__ == "__main__":
 
     with Pool(processes=2) as p:
         p.map(transcribe_segments, sys.argv[1:])
-        p.close()
-        p.join()
 
     print("Transcription completed.")
