@@ -11,13 +11,15 @@ from multiprocessing import Pool
 
 # separator = Separator('spleeter:2stems')
 
-def process_segment(audio_file, segment):
-    i = segment
+def process_segment(audio_file_path, segment_index):
+    audio = AudioSegment.from_file(audio_file_path)
+    i = segment_index
     start_time = i * 3600000
-    end_time = min((i + 1) * 3600000, len(audio_file))
-    segment = audio_file[start_time:end_time]
+    end_time = min((i + 1) * 3600000, len(audio))
+    segment = audio[start_time:end_time]
     print(f"Processing segment {i} from {start_time} to {end_time}")
-    segment.export(audio_file.split("/")[-2] / f"segment_{i}.mp3", format="mp3")
+    output_dir = Path(audio_file_path).parent
+    segment.export(str(output_dir / f"segment_{i}.mp3"), format="mp3")
 
 if __name__ == "__main__":
 
