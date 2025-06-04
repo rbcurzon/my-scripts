@@ -44,7 +44,7 @@ if __name__ == "__main__":
         print("Usage: python transcribe.py <audio_file/s>")
         sys.exit(1)
 
-    with Pool(processes=2) as p:
+    with Pool(processes=multiprocessing.cpu_count()) as p:
         p.map(transcribe_segments, sys.argv[1:])
 
     print("Transcription completed.")
