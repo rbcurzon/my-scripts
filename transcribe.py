@@ -28,7 +28,7 @@ def transcribe_segments(segment_path):
         print(f"Invalid path: {segment_path}. Please provide a directory or an mp3 file.")
         return
 
-    print(f"Transcribing {segment_path}...")
+    print(f"Finished transcribing {segment_path}.")
     
     with open(metadata_path, "w") as f:
         writer = csv.writer(f, delimiter=",")
