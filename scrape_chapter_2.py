@@ -8,7 +8,7 @@ from selenium.webdriver.firefox.options import Options
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python scrape_chapter.py <URL>")
+        print("Usage: python scrape_chapter_2.py <URL>")
         sys.exit(1)
 
     URL = sys.argv[1]
@@ -28,8 +28,8 @@ def main():
 
     soup = BeautifulSoup(rendered_page, "html.parser")
 
-    book_chapter_texts = soup.select("div.verse-content-item")
-
+    book_chapter_texts = soup.select(".verse-chapter-wrapper")
+    
     with open(output_dir + "/" + file_name, "w", encoding="utf-8") as file:
         for book_chapter_text in book_chapter_texts:
             text = re.sub(r"\d", '', book_chapter_text.getText(strip=True))
