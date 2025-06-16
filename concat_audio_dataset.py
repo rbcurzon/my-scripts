@@ -34,4 +34,5 @@ if __name__ == "__main__":
 
     # Save the concatenated dataset to disk
     ds.save_to_disk(args.output_file)
+    print("Output", args.output_file)
     
