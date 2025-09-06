@@ -2,15 +2,15 @@ import argparse
 import sys
 import csv
 import multiprocessing
+import pathlib
 
+from time import sleep
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import (
     TimeoutException,
-    ElementClickInterceptedException,
     NoSuchElementException,
     UnexpectedAlertPresentException,
 )
@@ -22,6 +22,13 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 def submit_form(url: str, input_text: str, headless: bool = False, timeout: int = 20):
+    if pathlib.Path("datasets").is_dir() is False:
+            pathlib.Path("datasets").mkdir(parents=True, exist_ok=True)
+        
+    if pathlib.Path(f"datasets/{input_text}.csv").is_file():
+        logger.info(f"File datasets/{input_text}.csv already exists. Skipping download.")
+        return # Skip if file already exists
+
     options = Options()
     if headless:
         options.add_argument("--headless")
@@ -56,27 +63,35 @@ def submit_form(url: str, input_text: str, headless: bool = False, timeout: int 
                 writer.writerow(["mdh", "en"])
                 for ltab in ltab_elements:
                     rows = ltab.find_elements(By.TAG_NAME, "row")
-                    writer.writerow([rows[0].text, rows[1].text])
+                    if len(rows) >= 2:
+                        writer.writerow([rows[0].text, rows[1].text])
         except (NoSuchElementException, UnexpectedAlertPresentException) as e:
             logger.error(f"Failed to find element in 'corpus' frame: {e}")
     except (TimeoutException, NoSuchElementException) as e:
+        if pathlib.Path(f"error_screenshots").is_dir() is False:
+            pathlib.Path(f"error_screenshots").mkdir(parents=True, exist_ok=True)
         logger.error(f"Failed to complete the steps: {e}")
-        logger.debug(driver.page_source)  # Add this line for debugging
+        driver.save_screenshot(f"error_screenshots/error_{input_text}.png")
+        logger.info(f"Screenshot saved as error_screenshots/error_{input_text}.png")
         sys.exit(1)
     finally:
         driver.quit()
+        sleep(20)  # Ensure the browser has time to close properly
         logger.info("Browser closed")
     logger.info("Form submitted successfully")
 
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Fill 'westerTarget' and click the 7th button under #form0.")
+    parser = argparse.ArgumentParser(description="Fill 'westernTarget' and click the 7th button under #form0.")
     parser.add_argument("--url", required=True, help="Target page URL")
-    parser.add_argument("--text", nargs='+', required=True, help="Text(s) to input into the 'westerTarget' field (space separated)")
+    parser.add_argument("--text", nargs='+', required=True, help="Text(s) to input into the 'westernTarget' field (space separated)")
     parser.add_argument("--headless", action="store_true", help="Run Firefox in headless mode")
     parser.add_argument("--timeout", type=int, default=20, help="Max wait seconds for elements to appear")
     args = parser.parse_args()
 
-    # Run in parallel for each text input
-   with multiprocessing.Pool(2) as pool:
-       pool.starmap(submit_form, [(args.url, text, args.headless, args.timeout) for text in args.text])
+    # Use multiprocessing instead of subprocess for better resource management
+    with multiprocessing.Pool(processes=min(4, len(args.text))) as pool:
+        pool.starmap(
+            submit_form,
+            [(args.url, text, args.headless, args.timeout) for text in args.text]
+        )
+    logger.info("All processes completed.")
