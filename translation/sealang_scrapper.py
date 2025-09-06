@@ -1,0 +1,82 @@
+import argparse
+import sys
+import csv
+import multiprocessing
+
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import (
+    TimeoutException,
+    ElementClickInterceptedException,
+    NoSuchElementException,
+    UnexpectedAlertPresentException,
+)
+from selenium.webdriver.firefox.options import Options
+
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+logger = logging.getLogger(__name__)
+
+def submit_form(url: str, input_text: str, headless: bool = False, timeout: int = 20):
+    options = Options()
+    if headless:
+        options.add_argument("--headless")
+    options.add_argument("--start-maximized")
+
+    driver = webdriver.Firefox(options=options)
+    wait = WebDriverWait(driver, timeout)
+    logger.info(f"Text '{input_text}' - Browser launched")
+
+    try:
+        driver.get(url)
+        driver.switch_to.frame("menu")
+
+        field = wait.until(EC.presence_of_element_located((By.NAME, "westernTarget")))
+        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", field)
+        field.clear()
+        field.send_keys(input_text)
+
+        button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#form0 > button:nth-child(7)")))
+        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", button)
+        button.click()
+
+        driver.switch_to.default_content()
+        
+        try:
+            wait.until(EC.frame_to_be_available_and_switch_to_it((By.NAME, "corpus")))
+            ltab = wait.until(EC.presence_of_element_located((By.TAG_NAME, "ltab")))
+            
+            ltab_elements = driver.find_elements(By.TAG_NAME, "ltab")
+            with open(f"datasets/{input_text}.csv", mode="w", newline="", encoding="utf-8") as file:
+                writer = csv.writer(file)
+                writer.writerow(["mdh", "en"])
+                for ltab in ltab_elements:
+                    rows = ltab.find_elements(By.TAG_NAME, "row")
+                    writer.writerow([rows[0].text, rows[1].text])
+        except (NoSuchElementException, UnexpectedAlertPresentException) as e:
+            logger.error(f"Failed to find element in 'corpus' frame: {e}")
+    except (TimeoutException, NoSuchElementException) as e:
+        logger.error(f"Failed to complete the steps: {e}")
+        logger.debug(driver.page_source)  # Add this line for debugging
+        sys.exit(1)
+    finally:
+        driver.quit()
+        logger.info("Browser closed")
+    logger.info("Form submitted successfully")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Fill 'westerTarget' and click the 7th button under #form0.")
+    parser.add_argument("--url", required=True, help="Target page URL")
+    parser.add_argument("--text", nargs='+', required=True, help="Text(s) to input into the 'westerTarget' field (space separated)")
+    parser.add_argument("--headless", action="store_true", help="Run Firefox in headless mode")
+    parser.add_argument("--timeout", type=int, default=20, help="Max wait seconds for elements to appear")
+    args = parser.parse_args()
+
+    # Run in parallel for each text input
+   with multiprocessing.Pool(2) as pool:
+       pool.starmap(submit_form, [(args.url, text, args.headless, args.timeout) for text in args.text])
