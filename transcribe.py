@@ -1,24 +1,14 @@
-
-import multiprocessing
-multiprocessing.set_start_method('spawn', force=True)
-
-import sys
+import argparse
 import csv
 from pathlib import Path
-from multiprocessing import Pool
+
 import whisper
 
 model = whisper.load_model("turbo")
 
 def transcribe_segments(segment_path):
-    """
-    Transcribe the given audio file using the Whisper model.
-    """
-    
     segment_path = Path(segment_path)
-
     if segment_path.is_dir():
-        # If the path is a directory, get all mp3 files in it
         files = Path(segment_path).glob("*.mp3")
         metadata_path = segment_path / "metadata.csv"
     elif segment_path.is_file() and segment_path.suffix == ".mp3":
@@ -40,11 +30,11 @@ def transcribe_segments(segment_path):
             writer.writerow([audio_file.name, result['text']])
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python transcribe.py <audio_file/s>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Transcribe audio files.")
+    parser.add_argument("audio_files", nargs="+", help="List of audio files or directories to transcribe.")
+    args = parser.parse_args()
 
-    with Pool(processes=multiprocessing.cpu_count()) as p:
-        p.map(transcribe_segments, sys.argv[1:])
+    for file in args.audio_files:
+        transcribe_segments(file)
 
     print("Transcription completed.")
