@@ -1,5 +1,8 @@
 import argparse
 import csv
+import logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 from pathlib import Path
 
 import whisper
@@ -9,9 +12,6 @@ from datasets import load_dataset
 
 model = whisper.load_model("turbo")
 
-import logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-logger = logging.getLogger(__name__)
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
@@ -34,7 +34,6 @@ pipe = pipeline(
     device=device,
 )
 
-
 def transcribe_segments(segment_path, batch_size=8):
     segment_path = Path(segment_path)
     if segment_path.is_dir():
@@ -48,8 +47,10 @@ def transcribe_segments(segment_path, batch_size=8):
         return
     logger.info(f"Transcribing files in {segment_path}...")
 
+    generate_kwargs={"batch_size": batch_size, "chunk_length_s": 30, "max_new_tokens": 2250}
+
     paths_in_str = [str(file) for file in files]
-    results = pipe(paths_in_str, batch_size=batch_size, chunk_length_s=30)
+    results = pipe(paths_in_str, **generate_kwargs)
     zip_results = zip(paths_in_str, results)
 
     with open(metadata_path, "w") as f:
@@ -67,4 +68,4 @@ if __name__ == "__main__":
     for file in args.audio_files:
         transcribe_segments(file, batch_size=args.batch_size)
 
-    print("Transcription completed.")
+    logger.info("Transcription completed.")
