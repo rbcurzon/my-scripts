@@ -49,7 +49,7 @@ def transcribe_segments(segment_path, batch_size=8):
     logger.info(f"Transcribing files in {segment_path}...")
 
     paths_in_str = [str(file) for file in files]
-    results = pipe(paths_in_str, batch_size=batch_size)
+    results = pipe(paths_in_str, batch_size=batch_size, chunk_length_s=30)
     zip_results = zip(paths_in_str, results)
 
     with open(metadata_path, "w") as f:
