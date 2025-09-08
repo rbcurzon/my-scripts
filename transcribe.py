@@ -47,11 +47,12 @@ def transcribe_segments(segment_path, batch_size=8):
         return
     logger.info(f"Transcribing files in {segment_path}...")
 
-    generate_kwargs={"batch_size": batch_size, "chunk_length_s": 30, "max_new_tokens": 2250}
+    generate_kwargs={"batch_size": batch_size, "chunk_length_s": 30}
 
     paths_in_str = [str(file) for file in files]
     results = pipe(paths_in_str, **generate_kwargs)
-    zip_results = zip(paths_in_str, results)
+    result_texts = [result["text"] for result in results]
+    zip_results = zip(paths_in_str, result_texts)
 
     with open(metadata_path, "w") as f:
         writer = csv.writer(f, delimiter=",")
