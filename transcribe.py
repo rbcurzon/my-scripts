@@ -48,13 +48,14 @@ def transcribe_segments(segment_path, batch_size=8):
         return
     logger.info(f"Transcribing files in {segment_path}...")
 
-    results = pipe(files, batch_size=batch_size)
-    zip_results = zip(files, results)
+    paths_in_str = [str(file) for file in files]
+    results = pipe(paths_in_str, batch_size=batch_size)
+    zip_results = zip(paths_in_str, results)
 
     with open(metadata_path, "w") as f:
         writer = csv.writer(f, delimiter=",")
         writer.writerow(["file_name", "transcription"])
-        writer.writerows(zip_results)
+        writer.writerows(tuple(zip_results))
         logger.info(f"Finished transcribing {segment_path}.")
 
 if __name__ == "__main__":
