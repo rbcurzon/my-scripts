@@ -1,8 +1,13 @@
+import argparse
+import os
+from glob import glob
+
 import multiprocessing
 from pathlib import Path
 from multiprocessing import Pool
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
+from concurrent.futures import ThreadPoolExecutor
 
 def segment_vocals(input_file, output_dir, silence_thresh=-45, min_silence_len=800):
     """
@@ -39,9 +44,6 @@ def segment_vocals(input_file, output_dir, silence_thresh=-45, min_silence_len=8
     print(f"Segments saved to {output_path}")
 
 if __name__ == "__main__":
-    import argparse
-    import os
-    from glob import glob
 
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Segment vocals from an audio file.")
@@ -56,15 +58,13 @@ if __name__ == "__main__":
     # Create output directory if it doesn't exist
     os.makedirs(args.output, exist_ok=True)
 
-    with Pool(processes=multiprocessing.cpu_count()) as pool:
-        # Get a list of all audio files in the input directory
-        input_files = []
-        for input_path in args.input_file:
-            if Path(input_path).is_file():
-                input_files.append(input_path)
-
-        # Prepare arguments for parallel processing
-        tasks = [(file, args.output, args.silence_thresh, args.min_silence_len) for file in input_files]
-
-        # Process files in parallel
-        pool.starmap(segment_vocals, tasks)
+    with ThreadPoolExecutor(max_workers=min(3, len(args.input_file))) as executor:
+        futures = [
+            executor.submit(segment_vocals, file, args.output, args.silence_thresh, args.min_silence_len)
+            for file in args.input_file
+        ]
+        for future in futures:
+            try:
+                future.result()
+            except Exception as e:
+                print(f"An error occurred: {e}")
