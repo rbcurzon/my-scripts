@@ -2,6 +2,7 @@ import argparse
 import sys
 import csv
 import multiprocessing
+from concurrent.futures import ThreadPoolExecutor
 import pathlib
 
 from time import sleep
@@ -23,17 +24,23 @@ logger = logging.getLogger(__name__)
 
 def submit_form(url: str, input_text: str, headless: bool = False, timeout: int = 20):
     if pathlib.Path("datasets").is_dir() is False:
-            pathlib.Path("datasets").mkdir(parents=True, exist_ok=True)
-        
+            pathlib.Path("datasets").mkdir(parents=True, exist_ok=True)    
     if pathlib.Path(f"datasets/{input_text}.csv").is_file():
         logger.info(f"File datasets/{input_text}.csv already exists. Skipping download.")
         return # Skip if file already exists
-
+    if pathlib.Path(f"error_screenshots/error_{input_text}.png").is_file():
+        logger.info(f"File error_screenshots/error_{input_text}.png already exists. Skipping download.")
+        return
+    
     options = Options()
     if headless:
         options.add_argument("--headless")
-    options.add_argument("--start-maximized")
-
+    user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0"
+    options = Options()
+    options.add_argument("--headless")    
+    options.set_preference("general.useragent.override", user_agent)
+    options.set_preference("intl.accept_languages", "en-US, en")
+    
     driver = webdriver.Firefox(options=options)
     wait = WebDriverWait(driver, timeout)
     logger.info(f"Text '{input_text}' - Browser launched")
@@ -47,13 +54,14 @@ def submit_form(url: str, input_text: str, headless: bool = False, timeout: int 
         field.clear()
         field.send_keys(input_text)
 
-        button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#form0 > button:nth-child(7)")))
+        button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#form0 > button:nth-child(8)")))
         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", button)
         button.click()
 
         driver.switch_to.default_content()
         
         try:
+            sleep(2)  # Wait for 2 seconds to ensure the frame is loaded
             wait.until(EC.frame_to_be_available_and_switch_to_it((By.NAME, "corpus")))
             ltab = wait.until(EC.presence_of_element_located((By.TAG_NAME, "ltab")))
             
@@ -70,15 +78,15 @@ def submit_form(url: str, input_text: str, headless: bool = False, timeout: int 
     except (TimeoutException, NoSuchElementException) as e:
         if pathlib.Path(f"error_screenshots").is_dir() is False:
             pathlib.Path(f"error_screenshots").mkdir(parents=True, exist_ok=True)
-        logger.error(f"Failed to complete the steps: {e}")
-        driver.save_screenshot(f"error_screenshots/error_{input_text}.png")
+        if pathlib.Path(f"error_screenshots/error_{input_text}.png").is_file() is False:
+            driver.save_screenshot(f"error_screenshots/error_{input_text}.png")
         logger.info(f"Screenshot saved as error_screenshots/error_{input_text}.png")
         sys.exit(1)
     finally:
         driver.quit()
         sleep(20)  # Ensure the browser has time to close properly
-        logger.info("Browser closed")
-    logger.info("Form submitted successfully")
+        logger.info(f"Text {input_text} - Browser closed")
+    logger.info(f"Text {input_text} - Form submitted successfully")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fill 'westernTarget' and click the 7th button under #form0.")
@@ -89,9 +97,21 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Use multiprocessing instead of subprocess for better resource management
-    with multiprocessing.Pool(processes=min(4, len(args.text))) as pool:
-        pool.starmap(
-            submit_form,
-            [(args.url, text, args.headless, args.timeout) for text in args.text]
-        )
-    logger.info("All processes completed.")
+    # with multiprocessing.Pool(processes=min(4, len(args.text))) as pool:
+    #     pool.starmap(
+    #         submit_form,
+    #         [(args.url, text, args.headless, args.timeout) for text in args.text]
+    #     )
+    # logger.info("All processes completed.")
+    
+    with ThreadPoolExecutor(max_workers=min(6, len(args.text))) as executor:
+        futures = [
+            executor.submit(submit_form, args.url, text, args.headless, args.timeout)
+            for text in args.text
+            
+        ]
+        for future in futures:
+            try:
+                future.result()
+            except Exception as e:
+                logger.error(f"An error occurred: {e}")
